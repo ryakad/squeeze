@@ -14,7 +14,14 @@ from logbook import Logger
 
 from command import Command
 
-EVENT_TYPES = ["ADDED", "REMOVED", "MODIFIED", "COPIED", "RENAMED"]
+GIT_CHANGE_TYPES = ["ADDED", "DELETED", "MODIFIED", "COPIED", "RENAMED"]
+
+# Flags for change types
+DELTA_ADDED = 1
+DELTA_DELETED = 2
+DELTA_MODIFIED = 4
+DELTA_COPIED = 8
+DELTA_RENAMED = 16
 
 
 class GitSqueeze(object):
@@ -31,10 +38,8 @@ class GitSqueeze(object):
          # update the lockfile and issue an error.
          self.exit('lockfile already exists')
 
-      # Initialize the handlers array
+      # Initialize the handlers container
       self.handlers = {}
-      for item in EVENT_TYPES:
-         self.handlers[item] = []
 
       # Get the base path for the project. We will run all commands from here.
       self.project_base_dir = os.path.abspath(self.git_base_dir + "/..")
@@ -144,7 +149,7 @@ class GitSqueeze(object):
 
             for line in stdout:
                self.logger.notice('ADDED {0}'.format(line));
-               for function in self.handlers['ADDED']:
+               for function in self.get_handlers_for(DELTA_ADDED):
                   function(line)
 
          else:
@@ -181,17 +186,17 @@ class GitSqueeze(object):
 
       if changetype == "A":
          self.logger.notice('ADDED {0}'.format(files[0]))
-         for function in self.handlers['ADDED']:
+         for function in self.get_handlers_for(DELTA_ADDED):
             function(files[0])
 
       elif changetype == "M":
          self.logger.notice('MODIFIED {0}'.format(files[0]))
-         for function in self.handlers['MODIFIED']:
+         for function in self.get_handlers_for(DELTA_MODIFIED):
             function(files[0])
 
       elif changetype == "D":
-         self.logger.notice('REMOVED {0}'.format(files[0]))
-         for function in self.handlers['REMOVED']:
+         self.logger.notice('DELETED {0}'.format(files[0]))
+         for function in self.get_handlers_for(DELTA_DELETED):
             function(files[0])
 
       elif re.match(r'^R[0-9]+$', changetype):
@@ -201,14 +206,14 @@ class GitSqueeze(object):
          similarity = int(changetype.lstrip("R"))
          if not similarity == self.get_config('squeeze.rename-similarity', 100):
             self.logger.notice('RENAMED {0} -> {1}'.format(files[0], files[1]))
-            for function in self.handlers['RENAMED']:
+            for function in self.get_handlers_for(DELTA_RENAMED):
                function(files[0], files[1])
          else:
-            self.logger.notice('REMOVED {0}'.format(files[0]))
+            self.logger.notice('DELETED {0}'.format(files[0]))
             self.logger.notice('ADDED {0}'.format(files[0]))
-            for function in self.handlers['REMOVED']:
+            for function in self.get_handlers_for(DELTA_DELETED):
                function(files[0])
-            for function in self.handlers['ADDED']:
+            for function in self.get_handlers_for(DELTA_ADDED):
                function(files[0])
 
       elif re.match(r'^C[0-9]+$', changetype):
@@ -218,15 +223,22 @@ class GitSqueeze(object):
          similarity = int(changetype.lstrip("C"))
          if similarity == self.get_config('squeeze.copy-similarity', 100):
             self.logger.notice('COPIED {0} -> {1}'.format(files[0], files[1]))
-            for function in self.handlers['COPIED']:
+            for function in self.get_handlers_for(DELTA_COPIED):
                function(files[0], files[1])
          else:
             self.logger.notice('ADDED {0}'.format(files[0]))
-            for function in self.handlers['ADDED']:
+            for function in self.get_handlers_for(DELTA_ADDED):
                function(files[1])
 
       else:
          self.exit("Unhandled change type " + changetype)
+
+   def get_handlers_for(self, delta):
+      funcs = []
+      for index in [x for x in self.handlers if x & delta]:
+         funcs = funcs + self.handlers[index]
+
+      return funcs
 
    def parse_diff_line(self, line):
       """Parse lines from git diff to the desired format
@@ -247,12 +259,15 @@ class GitSqueeze(object):
    def exit(self, message, exitcode=1):
       """Writes a message to stderror"""
       self.logger.critical(message)
-      sys.stderr.write('ERROR ' + message)
+      sys.stderr.write('ERROR ' + message + "\n")
       self._cleanup()
       sys.exit(exitcode)
 
-   def add_handler(self, event, function):
-      if event not in EVENT_TYPES:
-         raise Exception('Invalid event type provided')
+   def add_handler(self, function, delta):
+      # if event not in GIT_CHANGE_TYPES:
+      #    raise Exception('Invalid event type provided')
 
-      self.handlers[event].append(function)
+      if delta not in self.handlers:
+         self.handlers[delta] = []
+
+      self.handlers[delta].append(function)

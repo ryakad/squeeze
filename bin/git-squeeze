@@ -17,14 +17,17 @@ import sys
 dirname = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.realpath(dirname + "/../src"))
 
-from gitsqueeze import GitSqueeze
+import gitsqueeze
 
 # Some dummy handlers
 def handle_add(filename):
    print "ADDED  " + filename
 
 def handle_remove(filename):
-   print "REMOVED  " + filename
+   print "DELETED  " + filename
+
+def handle_add_remove(filename):
+   print "ADDED or DELETED " + filename
 
 def handle_modify(filename):
    print "MODIFIED  " + filename
@@ -33,11 +36,12 @@ def handle_rename(filename1, filename2):
    print "RENAMED  " + filename1 + " -> " + filename2
 
 
-squeeze = GitSqueeze()
+squeeze = gitsqueeze.GitSqueeze()
 
-squeeze.add_handler('ADDED', handle_add)
-squeeze.add_handler('REMOVED', handle_remove)
-squeeze.add_handler('MODIFIED', handle_modify)
-squeeze.add_handler('RENAMED', handle_rename)
+squeeze.add_handler(handle_add, gitsqueeze.DELTA_ADDED)
+squeeze.add_handler(handle_add_remove, gitsqueeze.DELTA_ADDED | gitsqueeze.DELTA_DELETED)
+squeeze.add_handler(handle_remove, gitsqueeze.DELTA_DELETED)
+squeeze.add_handler(handle_modify, gitsqueeze.DELTA_MODIFIED)
+squeeze.add_handler(handle_rename, gitsqueeze.DELTA_RENAMED)
 
 squeeze.run()
