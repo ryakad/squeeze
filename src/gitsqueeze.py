@@ -10,7 +10,7 @@
 import os
 import sys
 import re
-from logbook import Logger
+import logbook
 
 from command import Command
 
@@ -51,7 +51,7 @@ class GitSqueeze(object):
       self.remote = self.get_config('squeeze.remote')
       self.branch = self.get_config('squeeze.branch', 'master')
 
-      self.logger.info('Starting Squeeze')
+      self.logger.info(' =========== Starting Squeeze ===========')
 
    def get_config(self, value, default=None):
       returncode, stdout, stderr = Command.run(['git', 'config', value])
@@ -65,7 +65,14 @@ class GitSqueeze(object):
       try:
          return self._logger
       except AttributeError:
-         self._logger = Logger('GitSqueeze')
+         # TODO Allow users to set log file in config. Will need to be
+         # writable by user running command. Check that and if not fall back
+         # to this log with an error on stderr.
+
+         handler = logbook.FileHandler(self.git_base_dir + "/squeeze/current.log")
+         handler.push_application()
+
+         self._logger = logbook.Logger('GitSqueeze')
          return self._logger
 
    @property
@@ -94,7 +101,7 @@ class GitSqueeze(object):
          return self._last_run_hash
       except AttributeError:
          if not os.path.exists(self.latest_run):
-            self.logger.warn('Unable to determin last run. All files in repo will be treated as additions for this run.')
+            self.logger.warn('Unable to determin last run. Treating all files as new!')
             self._last_run_hash = None
          else:
             with open(self.latest_run, "r") as f:
