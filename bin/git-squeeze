@@ -20,20 +20,20 @@ sys.path.insert(0, os.path.realpath(dirname + "/../src"))
 import gitsqueeze
 
 # Some dummy handlers
-def handle_add(filename):
-   print "ADDED  " + filename
+def handle_add(delta, *files):
+   print "ADDED  " + files[0]
 
-def handle_remove(filename):
-   print "DELETED  " + filename
+def handle_remove(delta, *files):
+   print "DELETED  " + files[0]
 
-def handle_add_remove(filename):
-   print "ADDED or DELETED " + filename
+def handle_add_remove(delta, *files):
+   print "ADDED or DELETED " + files[0]
 
-def handle_modify(filename):
-   print "MODIFIED  " + filename
+def handle_modify(delta, *files):
+   print "MODIFIED  " + files[0]
 
-def handle_rename(filename1, filename2):
-   print "RENAMED  " + filename1 + " -> " + filename2
+def handle_rename(delta, *files):
+   print "RENAMED  " + files[0] + " -> " + files[1]
 
 
 squeeze = gitsqueeze.GitSqueeze()

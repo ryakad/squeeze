@@ -150,7 +150,7 @@ class GitSqueeze(object):
             for line in stdout:
                self.logger.notice('ADDED {0}'.format(line));
                for function in self.get_handlers_for(FILE_ADDED):
-                  function(line)
+                  function(FILE_ADDED, line)
 
          else:
             # process files changed between commits
@@ -187,17 +187,17 @@ class GitSqueeze(object):
       if changetype == "A":
          self.logger.notice('ADDED {0}'.format(files[0]))
          for function in self.get_handlers_for(FILE_ADDED):
-            function(files[0])
+            function(FILE_ADDED, files[0])
 
       elif changetype == "M":
          self.logger.notice('MODIFIED {0}'.format(files[0]))
          for function in self.get_handlers_for(FILE_MODIFIED):
-            function(files[0])
+            function(FILE_MODIFIED, files[0])
 
       elif changetype == "D":
          self.logger.notice('DELETED {0}'.format(files[0]))
          for function in self.get_handlers_for(FILE_DELETED):
-            function(files[0])
+            function(FILE_DELETED, files[0])
 
       elif re.match(r'^R[0-9]+$', changetype):
          # We will check the similarity of the renamed file and if it is
@@ -207,14 +207,14 @@ class GitSqueeze(object):
          if not similarity == self.get_config('squeeze.rename-similarity', 100):
             self.logger.notice('RENAMED {0} -> {1}'.format(files[0], files[1]))
             for function in self.get_handlers_for(FILE_RENAMED):
-               function(files[0], files[1])
+               function(FILE_RENAMED, files[0], files[1])
          else:
             self.logger.notice('DELETED {0}'.format(files[0]))
             self.logger.notice('ADDED {0}'.format(files[0]))
             for function in self.get_handlers_for(FILE_DELETED):
-               function(files[0])
+               function(FILE_DELETED, files[0])
             for function in self.get_handlers_for(FILE_ADDED):
-               function(files[0])
+               function(FILE_ADDED, files[0])
 
       elif re.match(r'^C[0-9]+$', changetype):
          # We handle this in a similar method to the rename. If the
@@ -224,11 +224,11 @@ class GitSqueeze(object):
          if similarity == self.get_config('squeeze.copy-similarity', 100):
             self.logger.notice('COPIED {0} -> {1}'.format(files[0], files[1]))
             for function in self.get_handlers_for(FILE_COPIED):
-               function(files[0], files[1])
+               function(FILE_COPIED, files[0], files[1])
          else:
             self.logger.notice('ADDED {0}'.format(files[0]))
             for function in self.get_handlers_for(FILE_ADDED):
-               function(files[1])
+               function(FILE_ADDED, files[1])
 
       else:
          self.exit("Unhandled change type " + changetype)
