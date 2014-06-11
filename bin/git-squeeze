@@ -38,10 +38,10 @@ def handle_rename(filename1, filename2):
 
 squeeze = gitsqueeze.GitSqueeze()
 
-squeeze.add_handler(handle_add, gitsqueeze.DELTA_ADDED)
-squeeze.add_handler(handle_add_remove, gitsqueeze.DELTA_ADDED | gitsqueeze.DELTA_DELETED)
-squeeze.add_handler(handle_remove, gitsqueeze.DELTA_DELETED)
-squeeze.add_handler(handle_modify, gitsqueeze.DELTA_MODIFIED)
-squeeze.add_handler(handle_rename, gitsqueeze.DELTA_RENAMED)
+squeeze.add_handler(handle_add, gitsqueeze.FILE_ADDED)
+squeeze.add_handler(handle_add_remove, gitsqueeze.FILE_ADDED | gitsqueeze.FILE_DELETED)
+squeeze.add_handler(handle_remove, gitsqueeze.FILE_DELETED)
+squeeze.add_handler(handle_modify, gitsqueeze.FILE_MODIFIED)
+squeeze.add_handler(handle_rename, gitsqueeze.FILE_RENAMED)
 
 squeeze.run()

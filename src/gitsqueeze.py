@@ -17,11 +17,11 @@ from command import Command
 GIT_CHANGE_TYPES = ["ADDED", "DELETED", "MODIFIED", "COPIED", "RENAMED"]
 
 # Flags for change types
-DELTA_ADDED = 1
-DELTA_DELETED = 2
-DELTA_MODIFIED = 4
-DELTA_COPIED = 8
-DELTA_RENAMED = 16
+FILE_ADDED = 1
+FILE_DELETED = 2
+FILE_MODIFIED = 4
+FILE_COPIED = 8
+FILE_RENAMED = 16
 
 
 class GitSqueeze(object):
@@ -149,7 +149,7 @@ class GitSqueeze(object):
 
             for line in stdout:
                self.logger.notice('ADDED {0}'.format(line));
-               for function in self.get_handlers_for(DELTA_ADDED):
+               for function in self.get_handlers_for(FILE_ADDED):
                   function(line)
 
          else:
@@ -186,17 +186,17 @@ class GitSqueeze(object):
 
       if changetype == "A":
          self.logger.notice('ADDED {0}'.format(files[0]))
-         for function in self.get_handlers_for(DELTA_ADDED):
+         for function in self.get_handlers_for(FILE_ADDED):
             function(files[0])
 
       elif changetype == "M":
          self.logger.notice('MODIFIED {0}'.format(files[0]))
-         for function in self.get_handlers_for(DELTA_MODIFIED):
+         for function in self.get_handlers_for(FILE_MODIFIED):
             function(files[0])
 
       elif changetype == "D":
          self.logger.notice('DELETED {0}'.format(files[0]))
-         for function in self.get_handlers_for(DELTA_DELETED):
+         for function in self.get_handlers_for(FILE_DELETED):
             function(files[0])
 
       elif re.match(r'^R[0-9]+$', changetype):
@@ -206,14 +206,14 @@ class GitSqueeze(object):
          similarity = int(changetype.lstrip("R"))
          if not similarity == self.get_config('squeeze.rename-similarity', 100):
             self.logger.notice('RENAMED {0} -> {1}'.format(files[0], files[1]))
-            for function in self.get_handlers_for(DELTA_RENAMED):
+            for function in self.get_handlers_for(FILE_RENAMED):
                function(files[0], files[1])
          else:
             self.logger.notice('DELETED {0}'.format(files[0]))
             self.logger.notice('ADDED {0}'.format(files[0]))
-            for function in self.get_handlers_for(DELTA_DELETED):
+            for function in self.get_handlers_for(FILE_DELETED):
                function(files[0])
-            for function in self.get_handlers_for(DELTA_ADDED):
+            for function in self.get_handlers_for(FILE_ADDED):
                function(files[0])
 
       elif re.match(r'^C[0-9]+$', changetype):
@@ -223,11 +223,11 @@ class GitSqueeze(object):
          similarity = int(changetype.lstrip("C"))
          if similarity == self.get_config('squeeze.copy-similarity', 100):
             self.logger.notice('COPIED {0} -> {1}'.format(files[0], files[1]))
-            for function in self.get_handlers_for(DELTA_COPIED):
+            for function in self.get_handlers_for(FILE_COPIED):
                function(files[0], files[1])
          else:
             self.logger.notice('ADDED {0}'.format(files[0]))
-            for function in self.get_handlers_for(DELTA_ADDED):
+            for function in self.get_handlers_for(FILE_ADDED):
                function(files[1])
 
       else:
