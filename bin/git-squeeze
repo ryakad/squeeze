@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+#
+# git-squeeze binary
+# Copyright (c) Ryan Kadwell <ryan@riaka.ca>
+#
+# Example squeeze file to demonstrate how it is setup.
+#
+# To use this command as `git squeeze` you would simply need to add this bin
+# folder to your path.
+#
+# Author: Ryan Kadwell <ryan@riaka.ca>
+#
+
+import os
+import sys
+
+dirname = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.realpath(dirname + "/../src"))
+
+from gitsqueeze import GitSqueeze
+
+# Some dummy handlers
+def handle_add(filename):
+   print "ADDED  " + filename
+
+def handle_remove(filename):
+   print "REMOVED  " + filename
+
+def handle_modify(filename):
+   print "MODIFIED  " + filename
+
+def handle_rename(filename1, filename2):
+   print "RENAMED  " + filename1 + " -> " + filename2
+
+
+squeeze = GitSqueeze()
+
+squeeze.add_handler('ADDED', handle_add)
+squeeze.add_handler('REMOVED', handle_remove)
+squeeze.add_handler('MODIFIED', handle_modify)
+squeeze.add_handler('RENAMED', handle_rename)
+
+squeeze.run()
