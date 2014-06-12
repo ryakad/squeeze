@@ -14,8 +14,6 @@ import logbook
 
 from command import Command
 
-GIT_CHANGE_TYPES = ["ADDED", "DELETED", "MODIFIED", "COPIED", "RENAMED"]
-
 # Flags for change types
 FILE_ADDED = 1
 FILE_DELETED = 2
@@ -271,9 +269,6 @@ class GitSqueeze(object):
       sys.exit(exitcode)
 
    def add_handler(self, function, delta):
-      # if event not in GIT_CHANGE_TYPES:
-      #    raise Exception('Invalid event type provided')
-
       if delta not in self.handlers:
          self.handlers[delta] = []
 
