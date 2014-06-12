@@ -38,8 +38,12 @@ def handle_rename(delta, *files):
 
 squeeze = gitsqueeze.GitSqueeze()
 
+# Function will be called when a file addition is detected
 squeeze.add_handler(handle_add, gitsqueeze.FILE_ADDED)
+
+# Function will be called when a file addition or deletion is detected.
 squeeze.add_handler(handle_add_remove, gitsqueeze.FILE_ADDED | gitsqueeze.FILE_DELETED)
+
 squeeze.add_handler(handle_remove, gitsqueeze.FILE_DELETED)
 squeeze.add_handler(handle_modify, gitsqueeze.FILE_MODIFIED)
 squeeze.add_handler(handle_rename, gitsqueeze.FILE_RENAMED)

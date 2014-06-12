@@ -58,7 +58,7 @@ class GitSqueeze(object):
       if not returncode == 0:
          return default
 
-      return (''.join(stdout)).strip()
+      return ''.join(stdout).strip()
 
    @property
    def logger(self):
