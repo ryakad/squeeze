@@ -12,7 +12,8 @@ import sys
 import re
 import logbook
 
-from command import Command
+from util import Command, createPIDLockFile, removePIDLockFile
+
 
 # Flags for change types
 FILE_ADDED = 1
@@ -22,19 +23,20 @@ FILE_COPIED = 8
 FILE_RENAMED = 16
 
 
-class ChangeSet(object):
+class Squeeze(object):
 
    def __init__(self):
       """Initialize the Application Runner"""
+      # Make sure that the git subdir exists!
+      self.data_path = os.path.abspath(self.git_base_dir + "/squeeze")
+      if not os.path.exists(self.data_path):
+         os.makedirs(self.data_path)
+
       # Check & initialize lockfile
-      lockfile = os.path.abspath(self.git_base_dir + '/squeeze/.lock')
-      if not os.path.exists(lockfile):
-         # TODO: Create lock file
-         pass
-      else:
-         # TODO: Check that the process is currently running. If not we will
-         # update the lockfile and issue an error.
-         self.exit('lockfile already exists')
+      self.lockfile = os.path.abspath(self.data_path + '/.lock')
+      if not createPIDLockFile(self.lockfile):
+         self.logger.critical("Unable to create lockfile for process")
+         self.exit("Unable to create lockfile for process")
 
       # Initialize the handlers container
       self.handlers = {}
@@ -43,8 +45,7 @@ class ChangeSet(object):
       self.project_base_dir = os.path.abspath(self.git_base_dir + "/..")
 
       # These files do not neccesarily exist at this point.
-      self.latest_run = os.path.abspath(self.git_base_dir + "/squeeze/latest")
-      # self.log_file = os.path.abspath(self.git_base_dir + "/squeeze/latest.log")
+      self.latest_run = os.path.abspath(self.data_path + "/latest")
 
       self.remote = self.get_config('squeeze.remote')
       self.branch = self.get_config('squeeze.branch', 'master')
@@ -67,7 +68,7 @@ class ChangeSet(object):
          # writable by user running command. Check that and if not fall back
          # to this log with an error on stderr.
 
-         handler = logbook.FileHandler(self.git_base_dir + "/squeeze/current.log")
+         handler = logbook.FileHandler(os.path.abspath(self.data_path + "/current.log"))
          handler.push_application()
 
          self._logger = logbook.Logger('GitSqueeze')
@@ -134,15 +135,18 @@ class ChangeSet(object):
          if not returncode == 0:
             self.exit('Unable to find latest commit hash')
 
+         revlist = stdout
+
          if len(stdout) == 0:
             self.exit('There are currently no commits in repo')
 
-         latest_hash = stdout[0]
+         latest_hash = revlist[0]
 
          if latest_hash == self.last_run:
             self.logger.notice('Nothing to do.')
+            self._cleanup()
             sys.exit(0)
-         elif self.last_run == None:
+         elif not self.last_run:
             # need to handle all files under revision as additions
             returncode, stdout, stderr = Command.run(
                ['git', 'ls-tree', '-r', self.branch, '--name-only'],
@@ -156,6 +160,11 @@ class ChangeSet(object):
                self.logger.notice('ADDED {0}'.format(line));
                for function in self.get_handlers_for(FILE_ADDED):
                   function(FILE_ADDED, line)
+
+         elif self.last_run not in revlist:
+            msg = 'Commit "{0}" not in rev-list'.format(self.last_run)
+            self.logger.error(msg)
+            self.exit(msg)
 
          else:
             # process files changed between commits
@@ -182,8 +191,9 @@ class ChangeSet(object):
          self.exit(str(e))
 
    def _cleanup(self):
-      # TODO Remove lock file
-      pass
+      if not removePIDLockFile(self.lockfile):
+         self.logger.error("Unable to remove lockfile")
+         self.exit("Unable to remove lockfile. IF you are sure no other process is running you may remove the file {0} manually and try again".format(self.lockfile))
 
    def _process_diff(self, line):
       self.logger.debug('Called _process_diff for line: {0}'.format(line))

@@ -8,6 +8,20 @@
 # Author: Ryan Kadwell <ryan@riaka.ca>
 #
 
-from changeset import ChangeSet
+from squeeze import (
+   Squeeze,
+   FILE_ADDED,
+   FILE_DELETED,
+   FILE_MODIFIED,
+   FILE_COPIED,
+   FILE_RENAMED
+   )
 
-__all__ = ["ChangeSet"]
+__all__ = [
+   "Squeeze",
+   "FILE_ADDED",
+   "FILE_DELETED",
+   "FILE_MODIFIED",
+   "FILE_COPIED",
+   "FILE_RENAMED"
+   ]

@@ -3,7 +3,7 @@
 # git-squeeze binary
 # Copyright (c) Ryan Kadwell <ryan@riaka.ca>
 #
-# Example squeeze file to demonstrate how it is setup.
+# Sample git plugin
 #
 # To use this command as `git squeeze` you would simply need to add this bin
 # folder to your path.
@@ -15,7 +15,7 @@ import os
 import sys
 
 # dirname = os.path.dirname(os.path.abspath(__file__))
-# sys.path.insert(0, os.path.realpath(dirname + "/../gitsqueeze"))
+# sys.path.insert(0, os.path.realpath(dirname + "/.."))
 
 import gitsqueeze
 
@@ -35,8 +35,7 @@ def handle_modify(delta, *files):
 def handle_rename(delta, *files):
    print "RENAMED  " + files[0] + " -> " + files[1]
 
-
-squeeze = gitsqueeze.ChangeSet()
+squeeze = gitsqueeze.Squeeze()
 
 # Function will be called when a file addition is detected
 squeeze.add_handler(handle_add, gitsqueeze.FILE_ADDED)
@@ -48,4 +47,4 @@ squeeze.add_handler(handle_remove, gitsqueeze.FILE_DELETED)
 squeeze.add_handler(handle_modify, gitsqueeze.FILE_MODIFIED)
 squeeze.add_handler(handle_rename, gitsqueeze.FILE_RENAMED)
 
-squeeze.process()
+squeeze.parse()
