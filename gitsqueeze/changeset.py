@@ -22,7 +22,7 @@ FILE_COPIED = 8
 FILE_RENAMED = 16
 
 
-class GitSqueeze(object):
+class ChangeSet(object):
 
    def __init__(self):
       """Initialize the Application Runner"""
@@ -116,7 +116,7 @@ class GitSqueeze(object):
          f.write(value)
          # f.truncate()
 
-   def run(self):
+   def parse(self):
       try:
          # Make sure that we are on the proper branch to process.
          returncode, stdout, stderr = Command.run(['git', 'checkout', self.branch])

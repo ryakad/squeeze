@@ -17,7 +17,7 @@ import sys
 # dirname = os.path.dirname(os.path.abspath(__file__))
 # sys.path.insert(0, os.path.realpath(dirname + "/../gitsqueeze"))
 
-from gitsqueeze import gitsqueeze
+import gitsqueeze
 
 # Some dummy handlers
 def handle_add(delta, *files):
@@ -36,7 +36,7 @@ def handle_rename(delta, *files):
    print "RENAMED  " + files[0] + " -> " + files[1]
 
 
-squeeze = gitsqueeze.GitSqueeze()
+squeeze = gitsqueeze.ChangeSet()
 
 # Function will be called when a file addition is detected
 squeeze.add_handler(handle_add, gitsqueeze.FILE_ADDED)
@@ -48,4 +48,4 @@ squeeze.add_handler(handle_remove, gitsqueeze.FILE_DELETED)
 squeeze.add_handler(handle_modify, gitsqueeze.FILE_MODIFIED)
 squeeze.add_handler(handle_rename, gitsqueeze.FILE_RENAMED)
 
-squeeze.run()
+squeeze.process()

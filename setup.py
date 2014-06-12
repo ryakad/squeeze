@@ -1,4 +1,14 @@
-from distutils.core import setup
+#! /usr/bin/env python
+#
+# Git Squeeze
+# Copyright (c) Ryan Kadwell <ryan@riaka.ca>
+#
+# Python Package Setup File
+#
+# Author: Ryan Kadwell <ryan@riaka.ca>
+#
+
+from setuptools import setup
 
 setup(
    name='git-squeeze',
