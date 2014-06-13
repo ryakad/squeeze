@@ -9,14 +9,6 @@
 #
 
 from setuptools import setup
-# from pip.req import parse_requirements
-from os import path
-
-# # Fetch the list of requirements from the requirements.txt file
-# requirements = parse_requirements(
-#    path.abspath(os.path.dirname(path.abspath(__file__)) + "requirements.txt")
-#    )
-
 
 setup(
    name='gitsqueeze',
@@ -30,5 +22,8 @@ setup(
    description='Hook into git changesets',
    long_description=open('README.md').read(),
    # install_requires=[str(ir.req) for ir in requirements]
-   install_requires=["logbook>=0.7.0", "psutil>=2.1.0"],
+   install_requires=[
+      "logbook>=0.7.0",
+      "psutil>=2.1.0"
+   ],
 )

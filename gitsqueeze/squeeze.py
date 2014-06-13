@@ -50,7 +50,7 @@ class Squeeze(object):
       self.remote = self.get_config('squeeze.remote')
       self.branch = self.get_config('squeeze.branch', 'master')
 
-      self.logger.info(' =========== Starting Squeeze ===========')
+      self.logger.info('=========== Starting Squeeze ===========')
 
    def get_config(self, value, default=None):
       returncode, stdout, stderr = Command.run(['git', 'config', value])
