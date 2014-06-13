@@ -38,15 +38,6 @@ class Command(object):
       return proc.returncode, stdout, stderr
 
 
-class UI(object):
-
-   def __init__(self):
-      pass
-
-   def write(self):
-      pass
-
-
 def createPIDLockFile(filename):
    # A PID file exists we can check if we are able to remove it (i.e. the process
    # has ended but did not remove the lock file)
