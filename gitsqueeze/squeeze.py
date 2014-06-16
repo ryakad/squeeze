@@ -9,7 +9,6 @@
 
 import os
 import sys
-import re
 import logbook
 
 from util import Command, createPIDLockFile, removePIDLockFile
@@ -47,17 +46,17 @@ class Squeeze(object):
       # These files do not neccesarily exist at this point.
       self.latest_run = os.path.abspath(self.data_path + "/latest")
 
-      self.remote = self.get_config('squeeze.remote')
-      self.branch = self.get_config('squeeze.branch', 'master')
+      # self.remote = self.get_config('squeeze.remote')
+      # self.branch = self.get_config('squeeze.branch', 'master')
 
       self.logger.info('=========== Starting Squeeze ===========')
 
-   def get_config(self, value, default=None):
-      returncode, stdout, stderr = Command.run(['git', 'config', value])
-      if not returncode == 0:
-         return default
+   # def get_config(self, value, default=None):
+   #    returncode, stdout, stderr = Command.run(['git', 'config', value])
+   #    if not returncode == 0:
+   #       return default
 
-      return ''.join(stdout).strip()
+   #    return ''.join(stdout).strip()
 
    @property
    def logger(self):

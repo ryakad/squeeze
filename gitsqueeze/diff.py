@@ -9,6 +9,7 @@
 #
 
 import squeeze
+import re
 from util import Command
 
 
@@ -52,7 +53,7 @@ class GitDiff(object):
          for line in stdout:
             changes.append((squeeze.FILE_ADDED, [line]))
       else:
-         diff = "{0}..{1}".format(self.last_run, latest_hash)
+         diff = "{0}..{1}".format(a, b)
 
          returncode, stdout, stderr = Command.run(
             ['git', 'diff', '--name-status', '-C', diff]
