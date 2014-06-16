@@ -38,10 +38,10 @@ class Command(object):
       return proc.returncode, stdout, stderr
 
 
-def createPIDLockFile(filename):
+def create_pid_lock_file(filename):
    # A PID file exists we can check if we are able to remove it (i.e. the process
    # has ended but did not remove the lock file)
-   if os.path.exists(filename) and not removePIDLockFile(filename):
+   if os.path.exists(filename) and not remove_pid_lock_file(filename):
       return False
 
    with open(filename, "w") as f:
@@ -50,7 +50,7 @@ def createPIDLockFile(filename):
    return True
 
 
-def removePIDLockFile(filename):
+def remove_pid_lock_file(filename):
    with open(filename, "r") as f:
       pid = f.read().strip()
 

@@ -11,7 +11,7 @@ import os
 import sys
 import logbook
 
-from util import Command, createPIDLockFile, removePIDLockFile
+from util import Command, create_pid_lock_file, remove_pid_lock_file
 from diff import GitDiff
 
 # Flags for change types
@@ -33,7 +33,7 @@ class Squeeze(object):
 
       # Check & initialize lockfile
       self.lockfile = os.path.abspath(self.data_path + '/.lock')
-      if not createPIDLockFile(self.lockfile):
+      if not create_pid_lock_file(self.lockfile):
          self.logger.critical("Unable to create lockfile for process")
          self.exit("Unable to create lockfile for process")
 
@@ -45,9 +45,6 @@ class Squeeze(object):
 
       # These files do not neccesarily exist at this point.
       self.latest_run = os.path.abspath(self.data_path + "/latest")
-
-      # self.remote = self.get_config('squeeze.remote')
-      # self.branch = self.get_config('squeeze.branch', 'master')
 
       self.logger.info('=========== Starting Squeeze ===========')
 
@@ -154,7 +151,7 @@ class Squeeze(object):
          self.exit(str(e))
 
    def _cleanup(self):
-      if not removePIDLockFile(self.lockfile):
+      if not remove_pid_lock_file(self.lockfile):
          self.logger.error("Unable to remove lockfile")
          self.exit("Unable to remove lockfile. IF you are sure no other process is running you may remove the file {0} manually and try again".format(self.lockfile))
 
