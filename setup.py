@@ -24,6 +24,7 @@ setup(
    # install_requires=[str(ir.req) for ir in requirements]
    install_requires=[
       "logbook>=0.7.0",
-      "psutil>=2.1.0"
+      "psutil>=2.1.0",
+      "PyYaml>=3.11"
    ],
 )

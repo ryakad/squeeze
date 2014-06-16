@@ -16,11 +16,10 @@ from util import Command
 class GitDiff(object):
    """Find diff data for a git repository"""
 
-   def __init__(self, path, rename_similarity=100, copy_similarity=100, branch="master"):
+   def __init__(self, path, rename_similarity=100, copy_similarity=100):
       self.base_path = path
       self.rename_similarity = rename_similarity
       self.copy_similarity = copy_similarity
-      self.branch = branch
 
    def diff(self, a, b):
       """Returns diff data representing delta required to from commit a to b
@@ -41,9 +40,10 @@ class GitDiff(object):
          pass
 
       elif not a:
+         branch = "master" # TODO Use the current branch
          # Everything in repo is new since we dont have a starting point
          returncode, stdout, stderr = Command.run(
-            ['git', 'ls-tree', '-r', self.branch, '--name-only'],
+            ['git', 'ls-tree', '-r', branch, '--name-only'],
             cwd=self.base_path
          )
 

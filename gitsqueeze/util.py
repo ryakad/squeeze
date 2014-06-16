@@ -10,6 +10,8 @@
 import subprocess
 import os
 import psutil
+import yaml
+
 
 class Command(object):
    """Wrapper for subprocess.Popen"""
@@ -61,3 +63,25 @@ def remove_pid_lock_file(filename):
       return True
    else:
       return False
+
+
+class Config(object):
+
+   def __init__(self, filename):
+      if not os.path.exists(filename):
+         raise ValueError("The file {0} does not exist".format(filename))
+      elif not os.access(filename, os.R_OK):
+         raise ValueError("The file {0} is not readable".format(filename))
+
+      with open(filename) as f:
+         self.config_data = yaml.load(f)
+
+   def get(self, value_name, default=None):
+      data = self.config_data
+      for key in value_name.split("."):
+         if key in data:
+            data = data[key]
+         else:
+            return default
+
+      return data
