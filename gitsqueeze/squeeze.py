@@ -15,11 +15,11 @@ from util import Command, Config, create_pid_lock_file, remove_pid_lock_file
 from diff import GitDiff
 
 # Flags for change types
-FILE_ADDED = 1
-FILE_DELETED = 2
-FILE_MODIFIED = 4
-FILE_COPIED = 8
-FILE_RENAMED = 16
+FILE_ADDED    = 0b00001 # 1
+FILE_DELETED  = 0b00010 # 2
+FILE_MODIFIED = 0b00100 # 4
+FILE_COPIED   = 0b01000 # 8
+FILE_RENAMED  = 0b10000 # 16
 
 
 class Squeeze(object):
