@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# git-squeeze binary
+# git-squeeze
 # Copyright (c) Ryan Kadwell <ryan@riaka.ca>
 #
 # Sample git plugin
@@ -21,19 +21,19 @@ import gitsqueeze
 
 # Some dummy handlers
 def handle_add(delta, *files):
-   print "ADDED  " + files[0]
+   print "ADDED " + files[0]
 
 def handle_remove(delta, *files):
-   print "DELETED  " + files[0]
+   print "DELETED " + files[0]
 
 def handle_add_remove(delta, *files):
    print "ADDED or DELETED " + files[0]
 
 def handle_modify(delta, *files):
-   print "MODIFIED  " + files[0]
+   print "MODIFIED " + files[0]
 
 def handle_rename(delta, *files):
-   print "RENAMED  " + files[0] + " -> " + files[1]
+   print "RENAMED " + files[0] + " -> " + files[1]
 
 squeeze = gitsqueeze.Squeeze()
 

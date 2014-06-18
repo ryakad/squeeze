@@ -89,7 +89,7 @@ class GitRepo(BaseRepo):
          diff = "{0}..{1}".format(a, b)
          returncode, stdout, stderr = Command.run(
             ['git', 'diff', '--name-status', '-C', diff],
-            cwd=self.base_dir
+            cwd=self.base_path
          )
 
          if not returncode == 0:
@@ -155,7 +155,7 @@ class HgRepo(BaseRepo):
          # Treat everything as new
          returncode, stdout, stderr = Command.run(
             ["hg", "locate"],
-            cwd=self.base_dir
+            cwd=self.base_path
          )
 
          if not returncode == 0:
