@@ -6,15 +6,16 @@ class HgDiffTest(unittest.TestCase):
 
    def test_can_parse_diff(self):
       diffdata = [
-         'A file1',
+         'A file1', # add file1 and file2
          'A file2',
-         'R file3',
-         'A file4',
+         'R file3', # remove file3
+         'A file4', # rename file5 -> file4
          '  file5',
          'R file5',
-         'A file6',
+         'A file6', # copy file7 to file6
          '  file7',
-         'C file8'
+         'C file8',  # add file8
+         'M file9'   # modify file9
       ]
 
       d = diff.HgDiff("")
@@ -23,7 +24,7 @@ class HgDiffTest(unittest.TestCase):
       self.assertEquals(result, {
          'ADDED': [["file1"], ["file2"], ["file8"]],
          'DELETED': [["file3"]],
-         'MODIFIED': [],
+         'MODIFIED': [["file9"]],
          'COPIED': [['file7', 'file6']],
          'RENAMED': [['file5', 'file4']]
       })
