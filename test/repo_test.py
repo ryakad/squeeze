@@ -1,9 +1,19 @@
+#! /usr/bin/env python
+#
+# GitSqueeze
+# Copyright (c) Ryan Kadwell <ryan@riaka.ca>
+#
+# Tests for the gitsqeeze.repo classes
+#
+# Author: Ryan Kadwell <ryan@riaka.ca>
+#
+
 import unittest
 
 from gitsqueeze import *
-from gitsqueeze import diff
+from gitsqueeze import repo
 
-class HgDiffTest(unittest.TestCase):
+class HgRepoTest(unittest.TestCase):
 
    def test_parse_diff(self):
       diff_lines = [
@@ -19,7 +29,7 @@ class HgDiffTest(unittest.TestCase):
          'M file9'   # modify file9
       ]
 
-      d = diff.HgDiff("")
+      d = repo.HgRepo("")
       result = d._parse_diff(diff_lines)
 
       self.assertEquals(result, {
@@ -32,7 +42,7 @@ class HgDiffTest(unittest.TestCase):
 
    def test_parse_empty_diff(self):
       diff_lines = []
-      d = diff.HgDiff("")
+      d = repo.HgRepo("")
       result = d._parse_diff(diff_lines)
       self.assertEquals({
          'ADDED': [],
@@ -48,7 +58,7 @@ class HgDiffTest(unittest.TestCase):
          '  file2',
       ]
 
-      d = diff.HgDiff("")
+      d = repo.HgRepo("")
       result = d._parse_diff(diff_lines)
 
       self.assertEquals(result, {
@@ -66,7 +76,7 @@ class HgDiffTest(unittest.TestCase):
          'R file2'
       ]
 
-      d = diff.HgDiff("")
+      d = repo.HgRepo("")
       result = d._parse_diff(diff_lines)
 
       self.assertEquals(result, {
@@ -77,7 +87,7 @@ class HgDiffTest(unittest.TestCase):
          'RENAMED': [["file2", "file1"]]
       })
 
-class GitDiffTest(unittest.TestCase):
+class GitRepoTest(unittest.TestCase):
    def test_parse_diff(self):
       diff_lines = [
          'A\tfile1',
@@ -88,7 +98,7 @@ class GitDiffTest(unittest.TestCase):
          'C100\tfile7\tfile8'
       ]
 
-      d = diff.GitDiff("")
+      d = repo.GitRepo("")
       result = d._parse_diff(diff_lines)
 
       self.assertEquals(result, [
@@ -105,7 +115,7 @@ class GitDiffTest(unittest.TestCase):
          "R100\tfile1\tfile2"
       ]
 
-      d = diff.GitDiff("")
+      d = repo.GitRepo("")
       result = d._parse_diff(diff_lines)
 
       self.assertEquals(result, [
@@ -117,7 +127,7 @@ class GitDiffTest(unittest.TestCase):
          "R090\tfile1\tfile2"
       ]
 
-      d = diff.GitDiff("")
+      d = repo.GitRepo("")
       result = d._parse_diff(diff_lines)
 
       self.assertEquals(result, [
@@ -130,7 +140,7 @@ class GitDiffTest(unittest.TestCase):
          "R090\tfile1\tfile2"
       ]
 
-      d = diff.GitDiff("", rename_similarity=80)
+      d = repo.GitRepo("", rename_similarity=80)
       result = d._parse_diff(diff_lines)
 
       self.assertEquals(result, [
@@ -142,7 +152,7 @@ class GitDiffTest(unittest.TestCase):
          "C100\tfile1\tfile2"
       ]
 
-      d = diff.GitDiff("")
+      d = repo.GitRepo("")
       result = d._parse_diff(diff_lines)
 
       self.assertEquals(result, [
@@ -154,7 +164,7 @@ class GitDiffTest(unittest.TestCase):
          "C090\tfile1\tfile2"
       ]
 
-      d = diff.GitDiff("")
+      d = repo.GitRepo("")
       result = d._parse_diff(diff_lines)
 
       self.assertEquals(result, [
@@ -166,7 +176,7 @@ class GitDiffTest(unittest.TestCase):
          "C090\tfile1\tfile2"
       ]
 
-      d = diff.GitDiff("", copy_similarity=80)
+      d = repo.GitRepo("", copy_similarity=80)
       result = d._parse_diff(diff_lines)
 
       self.assertEquals(result, [

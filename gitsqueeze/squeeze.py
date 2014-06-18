@@ -12,9 +12,9 @@ import sys
 import logbook
 
 from util import Command, Config, create_pid_lock_file, remove_pid_lock_file
-from diff import GitDiff
+from repo import get_repo
 
-# Flags for change types
+# Binary flags for delta types
 FILE_ADDED    = 0b00001 # 1
 FILE_DELETED  = 0b00010 # 2
 FILE_MODIFIED = 0b00100 # 4
@@ -116,36 +116,33 @@ class Squeeze(object):
 
       with open(self.latest_run, "w") as f:
          f.write(value)
-         # f.truncate()
 
    def parse(self):
       self.logger.debug('Starting Run')
       try:
-         # Find what commit we are processing up to.
-         returncode, stdout, stder = Command.run(['git', 'rev-list', '--all'])
-         if not returncode == 0:
+
+         repo = get_repo("git", self.project_base_dir,
+            rename_similarity=self.config.get("similarity.rename", 100),
+            copy_similarity=self.config.get("similarity.copy", 100)
+            )
+
+         commits = repo.commit_list()
+         if commits == None:
             self.exit('Unable to find latest commit hash')
 
-         revlist = stdout
-
-         if len(stdout) == 0:
+         if len(commits) == 0:
             self.exit('There are currently no commits in repo')
 
-         latest_hash = revlist[0]
+         latest_hash = commits[0]
 
          # make sure that we can even find the last commit in the tree.
-         if self.last_run and self.last_run != latest_hash and self.last_run not in revlist:
-            msg = 'Commit "{0}" not in rev-list'.format(self.last_run)
+         if self.last_run and self.last_run != latest_hash and self.last_run not in commits:
+            msg = 'Commit "{0}" not in history'.format(self.last_run)
             self.logger.error(msg)
             self.exit(msg)
 
          self.logger.notice("Querying changes from {0} to {1}.".format(self.last_run, latest_hash))
-         diff = GitDiff(
-            path=self.project_base_dir,
-            rename_similarity=self.config.get("similarity.rename", 100),
-            copy_similarity=self.config.get("similarity.copy", 100)
-            )
-         changes = diff.diff(self.last_run, latest_hash)
+         changes = repo.diff(self.last_run, latest_hash)
 
          for changetype, files in changes:
             for function in self.get_handlers_for(changetype):

@@ -13,15 +13,47 @@ import re
 from util import Command
 
 
-class BaseDiff(object):
+def get_repo(repo_type, path, **kwargs):
+   """Return a repo of the given type initialised with kwargs
+
+      This method is a factory constructor for creating different repository
+      classes.
+
+      Current supported types are:
+
+      git - Will create a Git repository
+      hg  - Will create a Mercurial repository
+   """
+
+   if repo_type == "git":
+      return GitRepo(path, **kwargs)
+   elif repo_type == "hg":
+      return HgRepo(path, **kwargs)
+   else:
+      raise ValueError("Unknown repo_type {0} provided".format(repo_type))
+
+class BaseRepo(object):
    def __init__(self, path, rename_similarity=100, copy_similarity=100):
       self.base_path = path
+
+      # Not all repo's will be able to make use of these.
       self.rename_similarity = rename_similarity
       self.copy_similarity = copy_similarity
 
 
-class GitDiff(BaseDiff):
-   """Find diff data from a Git repository"""
+# Our representation of a git repository
+class GitRepo(BaseRepo):
+   def commit_list(self):
+      """Return an array of commits that are in the repo
+
+         Only the commit identifier should be returned and should be in reverse
+         order. The newest commit sha should be first in the list.
+      """
+      returncode, stdout, stder = Command.run(['git', 'rev-list', '--all'], cwd=self.base_path)
+      if not returncode == 0:
+         return None
+
+      return stdout
 
    def diff(self, a, b):
       """Returns diff data representing delta required to from commit a to b
@@ -64,8 +96,6 @@ class GitDiff(BaseDiff):
             raise Exception("Unable to find changed files")
 
          changes = self._parse_diff(stdout)
-         # for line in stdout:
-         #    changes = changes + self._parse_diff_line(line)
 
       return changes
 
@@ -113,9 +143,8 @@ class GitDiff(BaseDiff):
          else:
             return [(squeeze.FILE_ADDED, [files[1]])]
 
-
-class HgDiff(BaseDiff):
-   """Calculate diff data from a Mercuial repository"""
+# Our representation of a mercurial repository
+class HgRepo(BaseRepo):
    def diff(self, a, b):
       changes = []
 
