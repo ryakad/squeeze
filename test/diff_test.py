@@ -125,6 +125,18 @@ class GitDiffTest(unittest.TestCase):
          (FILE_ADDED, ["file2"])
       ])
 
+   def test_can_lower_required_rename_similarity(self):
+      diff_lines = [
+         "R090\tfile1\tfile2"
+      ]
+
+      d = diff.GitDiff("", rename_similarity=80)
+      result = d._parse_diff(diff_lines)
+
+      self.assertEquals(result, [
+         (FILE_RENAMED, ["file1", "file2"])
+      ])
+
    def test_detect_copied_files(self):
       diff_lines = [
          "C100\tfile1\tfile2"
@@ -147,4 +159,16 @@ class GitDiffTest(unittest.TestCase):
 
       self.assertEquals(result, [
          (FILE_ADDED, ["file2"])
+      ])
+
+   def test_can_lower_required_copy_similarity(self):
+      diff_lines = [
+         "C090\tfile1\tfile2"
+      ]
+
+      d = diff.GitDiff("", copy_similarity=80)
+      result = d._parse_diff(diff_lines)
+
+      self.assertEquals(result, [
+         (FILE_COPIED, ["file1", "file2"])
       ])
