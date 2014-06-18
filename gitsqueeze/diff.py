@@ -13,13 +13,15 @@ import re
 from util import Command
 
 
-class GitDiff(object):
-   """Find diff data for a git repository"""
-
+class BaseDiff(object):
    def __init__(self, path, rename_similarity=100, copy_similarity=100):
       self.base_path = path
       self.rename_similarity = rename_similarity
       self.copy_similarity = copy_similarity
+
+
+class GitDiff(BaseDiff):
+   """Find diff data from a Git repository"""
 
    def diff(self, a, b):
       """Returns diff data representing delta required to from commit a to b
@@ -54,9 +56,9 @@ class GitDiff(object):
             changes.append((squeeze.FILE_ADDED, [line]))
       else:
          diff = "{0}..{1}".format(a, b)
-
          returncode, stdout, stderr = Command.run(
-            ['git', 'diff', '--name-status', '-C', diff]
+            ['git', 'diff', '--name-status', '-C', diff],
+            cwd=self.base_dir
          )
 
          if not returncode == 0:
@@ -103,3 +105,80 @@ class GitDiff(object):
             return [(squeeze.FILE_COPIED, files)]
          else:
             return [(squeeze.FILE_ADDED, files[1])]
+
+
+class HgDiff(BaseDiff):
+   """Calculate diff data from a Mercuial repository"""
+   def diff(self, a, b):
+      changes = []
+
+      # Commands are:
+      # hg status -A --rev prev:tip
+      # hg id -i
+
+      if a == b:
+         # Nothing to do.
+         pass
+      elif not a:
+         # Treat everything as new
+         returncode, stdout, stderr = Command.run(
+            ["hg", "locate"],
+            cwd=self.base_dir
+         )
+
+         if not returncode == 0:
+            raise Exception("Unable to find changed files")
+
+         for line in stdout:
+            changes.append((squeeze.FILE_ADDED, [line]))
+      else:
+         diff = "{0}:{1}".format(a, b)
+         returncode, stdout, stderr = Command.run(
+            ["hg", "status", "-A", "--rev", diff]
+         )
+
+         if not returncode == 0:
+            raise Exception("Unable to find changed files")
+
+         diff = self._parse_diff(stdout)
+
+         changes.append([(squeeze.FILE_ADDED, x) for x in diff['ADDED']])
+         changes.append([(squeeze.FILE_DELETED, x) for x in diff['DELETED']])
+         changes.append([(squeeze.FILE_MODIFIED, x) for x in diff['MODIFIED']])
+         changes.append([(squeeze.FILE_RENAMED, x) for x in diff['RENAMED']])
+         changes.append([(squeeze.FILE_COPIED, x) for x in diff['COPIED']])
+
+      return changes
+
+
+   def _parse_diff(self, diff_lines):
+      diff = {
+         'ADDED':[], 'DELETED':[], 'MODIFIED':[], 'COPIED':[], 'RENAMED':[]
+      }
+
+      for line in diff_lines:
+         changetype, path = line[0], line[2:]
+         if changetype == "A" or changetype == "C": # added
+            if changetype == "A":
+               last_added = path
+            diff['ADDED'].append([path])
+         elif changetype == "M":
+            diff['MODIFIED'].append([path])
+         elif changetype == "R":
+            # If this path is the first path in a copy then change the copy
+            # to a rename
+            match_copied = [ x for x in diff['COPIED'] if x[0] == path ]
+            if match_copied:
+               for files in match_copied:
+                  diff['RENAMED'].append(files)
+               diff['COPIED'] = [ x for x in diff['COPIED'] if x[0] != path]
+            else:
+               diff['DELETED'].append([path])
+
+         elif changetype == " ": # origin of the previous file listed as A
+            if last_added: # This should always be true
+               diff['COPIED'].append([path, last_added])
+               if [last_added] in diff['ADDED']:
+                  diff['ADDED'].remove([last_added])
+
+      return diff
