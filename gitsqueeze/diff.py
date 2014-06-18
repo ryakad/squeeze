@@ -40,7 +40,6 @@ class GitDiff(BaseDiff):
       if a == b:
          # Nothing to do.
          pass
-
       elif not a:
          branch = "master" # TODO Use the current branch
          # Everything in repo is new since we dont have a starting point
@@ -64,8 +63,16 @@ class GitDiff(BaseDiff):
          if not returncode == 0:
             raise Exception("Unable to find changed files")
 
-         for line in stdout:
-            changes = changes + self._parse_diff_line(line)
+         changes = self._parse_diff(stdout)
+         # for line in stdout:
+         #    changes = changes + self._parse_diff_line(line)
+
+      return changes
+
+   def _parse_diff(self, lines):
+      changes = []
+      for line in lines:
+         changes = changes + self._parse_diff_line(line)
 
       return changes
 
@@ -90,31 +97,27 @@ class GitDiff(BaseDiff):
          return [(squeeze.FILE_MODIFIED, files)]
 
       elif changetype == "D":
-         return [(squeeze.FILE_MODIFIED, files)]
+         return [(squeeze.FILE_DELETED, files)]
 
       elif re.match(r'^R[0-9]+$', changetype):
          similarity = int(changetype.lstrip("R"))
          if similarity >= self.rename_similarity:
             return [(squeeze.FILE_RENAMED, files)]
          else:
-            return [(squeeze.FILE_DELETED, files[0]), (squeeze.FILE_ADDED, files[1])]
+            return [(squeeze.FILE_DELETED, [files[0]]), (squeeze.FILE_ADDED, [files[1]])]
 
       elif re.match(r'^C[0-9]+$', changetype):
          similarity = int(changetype.lstrip("C"))
          if similarity >= self.copy_similarity:
             return [(squeeze.FILE_COPIED, files)]
          else:
-            return [(squeeze.FILE_ADDED, files[1])]
+            return [(squeeze.FILE_ADDED, [files[1]])]
 
 
 class HgDiff(BaseDiff):
    """Calculate diff data from a Mercuial repository"""
    def diff(self, a, b):
       changes = []
-
-      # Commands are:
-      # hg status -A --rev prev:tip
-      # hg id -i
 
       if a == b:
          # Nothing to do.

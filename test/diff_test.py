@@ -1,11 +1,12 @@
 import unittest
 
+from gitsqueeze import *
 from gitsqueeze import diff
 
 class HgDiffTest(unittest.TestCase):
 
-   def test_can_parse_diff(self):
-      diffdata = [
+   def test_parse_diff(self):
+      diff_lines = [
          'A file1', # add file1 and file2
          'A file2',
          'R file3', # remove file3
@@ -19,7 +20,7 @@ class HgDiffTest(unittest.TestCase):
       ]
 
       d = diff.HgDiff("")
-      result = d._parse_diff(diffdata)
+      result = d._parse_diff(diff_lines)
 
       self.assertEquals(result, {
          'ADDED': [["file1"], ["file2"], ["file8"]],
@@ -29,10 +30,10 @@ class HgDiffTest(unittest.TestCase):
          'RENAMED': [['file5', 'file4']]
       })
 
-   def test_can_parse_empty_diff(self):
-      diffdata = []
+   def test_parse_empty_diff(self):
+      diff_lines = []
       d = diff.HgDiff("")
-      result = d._parse_diff(diffdata)
+      result = d._parse_diff(diff_lines)
       self.assertEquals({
          'ADDED': [],
          'DELETED': [],
@@ -41,14 +42,14 @@ class HgDiffTest(unittest.TestCase):
          'RENAMED': []
       }, result)
 
-   def test_can_detect_copied_files(self):
-      diffdata = [
+   def test_detect_copied_files(self):
+      diff_lines = [
          'A file1',
          '  file2',
       ]
 
       d = diff.HgDiff("")
-      result = d._parse_diff(diffdata)
+      result = d._parse_diff(diff_lines)
 
       self.assertEquals(result, {
          'ADDED': [],
@@ -58,15 +59,15 @@ class HgDiffTest(unittest.TestCase):
          'RENAMED': []
       })
 
-   def test_can_detect_renamed_files(self):
-      diffdata = [
+   def test_detect_renamed_files(self):
+      diff_lines = [
          'A file1',
          '  file2',
          'R file2'
       ]
 
       d = diff.HgDiff("")
-      result = d._parse_diff(diffdata)
+      result = d._parse_diff(diff_lines)
 
       self.assertEquals(result, {
          'ADDED': [],
@@ -75,3 +76,75 @@ class HgDiffTest(unittest.TestCase):
          'COPIED': [],
          'RENAMED': [["file2", "file1"]]
       })
+
+class GitDiffTest(unittest.TestCase):
+   def test_parse_diff(self):
+      diff_lines = [
+         'A\tfile1',
+         'A\tfile2',
+         'D\tfile3',
+         'M\tfile4',
+         'R100\tfile5\tfile6',
+         'C100\tfile7\tfile8'
+      ]
+
+      d = diff.GitDiff("")
+      result = d._parse_diff(diff_lines)
+
+      self.assertEquals(result, [
+         (FILE_ADDED, ["file1"]),
+         (FILE_ADDED, ["file2"]),
+         (FILE_DELETED, ["file3"]),
+         (FILE_MODIFIED, ["file4"]),
+         (FILE_RENAMED, ["file5", "file6"]),
+         (FILE_COPIED, ["file7", "file8"])
+      ])
+
+   def test_detect_renamed_files(self):
+      diff_lines = [
+         "R100\tfile1\tfile2"
+      ]
+
+      d = diff.GitDiff("")
+      result = d._parse_diff(diff_lines)
+
+      self.assertEquals(result, [
+         (FILE_RENAMED, ["file1", "file2"])
+      ])
+
+   def test_respect_rename_similarity(self):
+      diff_lines = [
+         "R090\tfile1\tfile2"
+      ]
+
+      d = diff.GitDiff("")
+      result = d._parse_diff(diff_lines)
+
+      self.assertEquals(result, [
+         (FILE_DELETED, ["file1"]),
+         (FILE_ADDED, ["file2"])
+      ])
+
+   def test_detect_copied_files(self):
+      diff_lines = [
+         "C100\tfile1\tfile2"
+      ]
+
+      d = diff.GitDiff("")
+      result = d._parse_diff(diff_lines)
+
+      self.assertEquals(result, [
+         (FILE_COPIED, ["file1", "file2"])
+      ])
+
+   def test_respect_copy_similarity(self):
+      diff_lines = [
+         "C090\tfile1\tfile2"
+      ]
+
+      d = diff.GitDiff("")
+      result = d._parse_diff(diff_lines)
+
+      self.assertEquals(result, [
+         (FILE_ADDED, ["file2"])
+      ])
