@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 #
-# git-squeeze
+# scm-squeeze
 # Copyright (c) Ryan Kadwell <ryan@riaka.ca>
 #
-# Script to process file changes on a git repository as commits are made.
+# Script to process file changes on a scm repository as commits are made.
 #
 # Author: Ryan Kadwell <ryan@riaka.ca>
+#
 
 import os
 import sys
@@ -28,7 +29,7 @@ class Squeeze(object):
       """Initialize the Application Runner"""
       self.project_base_dir = self.get_base_dir()
 
-      # Make sure that the git subdir exists!
+      # Make sure that the squeeze subdir exists!
       self.data_path = os.path.abspath(self.project_base_dir + "/.squeeze")
       if not os.path.exists(self.data_path):
          os.makedirs(self.data_path)
@@ -47,6 +48,7 @@ class Squeeze(object):
       self.latest_run = os.path.abspath(self.data_path + "/latest")
 
       # Load the config file. Creating it if it does not already exist.
+      # TODO: Should create a squeeze init command to setup a directory.
       config_path = self.data_path + "/config.yml"
       if not os.path.exists(config_path):
          open(config_path, 'a').close()
@@ -85,7 +87,7 @@ class Squeeze(object):
       try:
          return self._logger
       except AttributeError:
-         # TODO Allow users to set log file in config. Will need to be
+         # TODO Allow users to set log file in config. File will need to be
          # writable by user running command. Check that and if not fall back
          # to this log with an error on stderr.
 

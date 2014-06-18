@@ -6,6 +6,7 @@
 # Script to process file changes on a git repository as commits are made.
 #
 # Author: Ryan Kadwell <ryan@riaka.ca>
+#
 
 import subprocess
 import os
