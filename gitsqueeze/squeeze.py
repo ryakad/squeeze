@@ -35,10 +35,7 @@ class Squeeze(object):
          sys.stderr.write("Unable to find squeeze basedir\n")
          sys.exit(1)
 
-      # Make sure that the squeeze subdir exists!
       self.data_path = os.path.abspath(self.project_base_dir + "/.squeeze")
-      if not os.path.exists(self.data_path):
-         os.makedirs(self.data_path)
 
       self.logger.debug('Initializing')
       # Check & initialize lockfile
@@ -60,6 +57,16 @@ class Squeeze(object):
          open(config_path, 'a').close()
 
       self.config = Config(config_path)
+
+      self.repo = repo = get_repo(
+         repo_type=self.config.get("similarity.rename", "git"),
+         path=self.project_base_dir,
+         rename_similarity=self.config.get("similarity.rename", 100),
+         copy_similarity=self.config.get("similarity.copy", 100)
+         )
+
+      # TODO: Setup the runner
+      self.runner = DiffRunner(self.repo)
 
    def get_base_dir(self):
       startpath = os.getcwd()
@@ -128,12 +135,7 @@ class Squeeze(object):
    def run(self):
       self.logger.debug('Starting Run')
       try:
-         repo = get_repo("git", self.project_base_dir,
-            rename_similarity=self.config.get("similarity.rename", 100),
-            copy_similarity=self.config.get("similarity.copy", 100)
-            )
-
-         commits = repo.commit_list()
+         commits = self.repo.commit_list
          if commits == None:
             self.exit('Unable to find latest commit hash')
 
@@ -149,11 +151,8 @@ class Squeeze(object):
             self.exit(msg)
 
          self.logger.notice("Querying changes from {0} to {1}.".format(self.last_run, latest_hash))
-         changes = repo.diff(self.last_run, latest_hash)
 
-         for changetype, files in changes:
-            for function in self.get_handlers_for(changetype):
-               function(changetype, *files)
+         self.runner.run(self.last_run, latest_hash)
 
          self.last_run = latest_hash
 
@@ -163,17 +162,11 @@ class Squeeze(object):
       except Exception, e:
          self.exit(str(e))
 
+
    def _cleanup(self):
       if not remove_pid_lock_file(self.lockfile):
          self.logger.error("Unable to remove lockfile")
          self.exit("Unable to remove lockfile. IF you are sure no other process is running you may remove the file {0} manually and try again".format(self.lockfile))
-
-   def get_handlers_for(self, delta):
-      funcs = []
-      for index in [x for x in self.handlers if x & delta]:
-         funcs = funcs + self.handlers[index]
-
-      return funcs
 
    def exit(self, message, exitcode=1):
       """Writes a message to stderror and exits"""
@@ -183,7 +176,51 @@ class Squeeze(object):
       sys.exit(exitcode)
 
    def add_handler(self, function, delta):
+      self.runner.add_handler(function, delta)
+
+
+class DiffRunner(object):
+   """Process Diff calling callbacks for each
+   """
+   def __init__(self, repo):
+      self.handlers = {}
+      self.repo = repo
+
+   def run(self, a, b):
+      """Calls handler for each change between commits a and b"""
+      if a and not self.repo.has_commit(a):
+         raise ValueError('Repository does not have a commit identified by "{0}"'.format(a))
+      elif b and not self.repo.has_commit(b):
+         raise ValueError('Repository does not have a commit identified by "{0}"'.format(b))
+
+      changes = self.repo.diff(a, b)
+
+      for changetype, files in changes:
+         for function in self.get_handlers_for(changetype):
+            function(changetype, *files)
+
+   def add_handler(self, function, delta):
+      """Add a function to the list of handlers
+
+         Available handler deltas are:
+         gitsqueeze.FILE_ADDED
+         gitsqueeze.FILE_DELETED
+         gitsqueeze.FILE_MODIFIED
+         gitsqueeze.FILE_COPIED
+         gitsqueeze.FILE_RENAMED
+
+         The handler function should take as parameters a delta parameter for
+         the type of change and a list of positional parameters representing
+         the effected files.
+      """
       if delta not in self.handlers:
          self.handlers[delta] = [function]
       else:
          self.handlers[delta].append(function)
+
+   def get_handlers_for(self, delta):
+      funcs = []
+      for index in [x for x in self.handlers if x & delta]:
+         funcs = funcs + self.handlers[index]
+
+      return funcs

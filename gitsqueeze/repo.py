@@ -40,20 +40,29 @@ class BaseRepo(object):
       self.rename_similarity = rename_similarity
       self.copy_similarity = copy_similarity
 
+   def has_commit(self, identifier):
+      return identifier in self.commit_list
 
 # Our representation of a git repository
 class GitRepo(BaseRepo):
+
+   @property
    def commit_list(self):
       """Return an array of commits that are in the repo
 
          Only the commit identifier should be returned and should be in reverse
          order. The newest commit sha should be first in the list.
       """
-      returncode, stdout, stder = Command.run(['git', 'rev-list', '--all'], cwd=self.base_path)
-      if not returncode == 0:
-         return None
+      try:
+         return self._commit_list
+      except AttributeError:
+         returncode, stdout, stder = Command.run(['git', 'rev-list', '--all'], cwd=self.base_path)
+         if not returncode == 0:
+            return None
 
-      return stdout
+         self._commit_list = stdout
+
+         return self._commit_list
 
    def diff(self, a, b):
       """Returns diff data representing delta required to from commit a to b
@@ -86,6 +95,9 @@ class GitRepo(BaseRepo):
          for line in stdout:
             changes.append((squeeze.FILE_ADDED, [line]))
       else:
+         if not b:
+            b = "HEAD"
+
          diff = "{0}..{1}".format(a, b)
          returncode, stdout, stderr = Command.run(
             ['git', 'diff', '--name-status', '-C', diff],
@@ -145,6 +157,25 @@ class GitRepo(BaseRepo):
 
 # Our representation of a mercurial repository
 class HgRepo(BaseRepo):
+
+   @property
+   def commit_list(self):
+      """Return an array of commits that are in the repo
+
+         Only the commit identifier should be returned and should be in reverse
+         order. The newest commit sha should be first in the list.
+      """
+      try:
+         return self._commit_list
+      except AttributeError:
+         returncode, stdout, stder = Command.run(['hg', 'log', '--template', '{node}\n'], cwd=self.base_path)
+         if not returncode == 0:
+            return None
+
+         self._commit_list = stdout
+
+         return self._commit_list
+
    def diff(self, a, b):
       changes = []
 
@@ -164,6 +195,9 @@ class HgRepo(BaseRepo):
          for line in stdout:
             changes.append((squeeze.FILE_ADDED, [line]))
       else:
+         if not b:
+            b = "tip"
+
          diff = "{0}:{1}".format(a, b)
          returncode, stdout, stderr = Command.run(
             ["hg", "status", "-A", "--rev", diff]
@@ -181,7 +215,6 @@ class HgRepo(BaseRepo):
          changes.append([(squeeze.FILE_COPIED, x) for x in diff['COPIED']])
 
       return changes
-
 
    def _parse_diff(self, diff_lines):
       diff = {
