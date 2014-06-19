@@ -14,10 +14,10 @@
 import os
 import sys
 
-dirname = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.realpath(dirname + "/../src"))
+# dirname = os.path.dirname(os.path.abspath(__file__))
+# sys.path.insert(0, os.path.realpath(dirname + "/../gitsqueeze"))
 
-import gitsqueeze
+from gitsqueeze import gitsqueeze
 
 # Some dummy handlers
 def handle_add(delta, *files):
