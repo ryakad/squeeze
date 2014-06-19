@@ -29,6 +29,12 @@ class Squeeze(object):
       """Initialize the Application Runner"""
       self.project_base_dir = self.get_base_dir()
 
+      if self.project_base_dir == None:
+         # We don't have a squeeze repo therefore can not do anything.
+         # Just exit
+         sys.stderr.write("Unable to find squeeze basedir\n")
+         sys.exit(1)
+
       # Make sure that the squeeze subdir exists!
       self.data_path = os.path.abspath(self.project_base_dir + "/.squeeze")
       if not os.path.exists(self.data_path):
@@ -73,7 +79,7 @@ class Squeeze(object):
       return None
 
    def _parent_path(self, path):
-      return os.path.abspath(path + "/..")
+      return os.path.abspath(path + "/..").replace('//','/')
 
    def _is_base_dir(self, path):
       for filename in os.listdir(path):
@@ -119,10 +125,9 @@ class Squeeze(object):
       with open(self.latest_run, "w") as f:
          f.write(value)
 
-   def parse(self):
+   def run(self):
       self.logger.debug('Starting Run')
       try:
-
          repo = get_repo("git", self.project_base_dir,
             rename_similarity=self.config.get("similarity.rename", 100),
             copy_similarity=self.config.get("similarity.copy", 100)

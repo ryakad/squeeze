@@ -47,4 +47,4 @@ squeeze.add_handler(handle_remove, gitsqueeze.FILE_DELETED)
 squeeze.add_handler(handle_modify, gitsqueeze.FILE_MODIFIED)
 squeeze.add_handler(handle_rename, gitsqueeze.FILE_RENAMED)
 
-squeeze.parse()
+squeeze.run()
