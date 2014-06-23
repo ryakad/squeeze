@@ -1,9 +1,9 @@
 Squeeze
 =======
 
-Squeeze is a python library to allow you to hook into your VCS changesets
-performing different actions on the different file changes. Currently
-supported VCSs are git and mercurial.
+Squeeze is a python library that allows you to hook into your VCS changesets
+performing actions on the different file changes. The currently supported
+VCSs are git and mercurial.
 
 
 Installation
@@ -19,20 +19,22 @@ python setup.py install
 
 Once you have installed the library and are ready use squeeze with an
 existing repo you will need to run the `squeeze` command in the base
-directory of the repo you want to use to setup the required folders and
-config files. You may also want to set the .squeeze directory to be ignored.
+directory of the repo to setup the required folders and config files. You
+may also want to set your VCS to ignore the .squeeze directory.
 
 
 How it works
 ------------
 
-### Handling changesets
+Squeeze is used to run a function against each diff in a changeset depending
+on the type of change. By default squeeze will keep track of the commit
+identifier that it stopped at and will start at that commit next time. This
+way each commit in the repo will be processed sequentially as changes are
+committed. If you do not want this sequential style you can make use of the
+core classes and customize squeeze to do what you need.
 
-There are currently two main levels to the application. At the top level
-there is the Squeeze class that can be used to keep track of the state and
-will always from the diff from the last run to the latest commit. If this is
-not what you desire you can always use the DiffRunner object directly and
-pass in the commit identifiers that you want to diff against.
+
+### Handling changesets
 
 The different changes that squeeze will detect are:
 
@@ -48,12 +50,12 @@ Each user function should be defined as:
 
 ```python
 def function_name(change_type, *files):
-   # handle function here
+   # handle changed file here
 ```
 
-The change_type will be a constant representing the change type that the file(s)
-has undergone. This allows you to tread a file addition, copy and rename all
-the same.
+The change_type will be a constant representing the change type that the
+file(s) has undergone. This makes it possible to have a function that
+handles multiple change types like in the example below.
 
 ```python
 def file_added(change_type, *files):
@@ -73,10 +75,9 @@ def file_added(change_type, *files):
    pass
 ```
 
-Once you have defined functions to be run on changes you will need to tell
+Once you have defined functions to be run for changes you will need to tell
 the application what changes you want that function called on. To do this
-you use the add_handler(func, type) method. You can reuse a function for
-multiple file types using the binry `|` operator.
+you use the add_handler(func, type) method. You can specify multiple change types using the binry `|` operator.
 
 ```python
 s = squeeze.Squeeze()
@@ -87,10 +88,7 @@ function handle_rename_copy(type, *files):
 s.add_handler(handle_rename_copy, squeeze.FILE_RENAMED | squeeze.FILE_COPIED)
 ```
 
-To run the diff you just use the `run()` method. If using the run method on
-the DiffRunner you will be required to pass in the start and end commit
-identifier. The Squeeze class handles this internally using a local file to
-cache the identifier of the last run.
+To run the diff you just use the `run()` method.
 
 
 ### Sample Application
@@ -119,5 +117,5 @@ s.run()
 
 For more samples you can look in the `examples` folder in this repo.
 
-If you find any bugs or just want a new feature submit an issue or if you
-are feeling more adventurous a pull request.
+If you find any bugs or just want a new feature submit an issue on github -
+or even better, a pull request.
