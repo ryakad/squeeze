@@ -3,7 +3,7 @@ import unittest
 import os
 import sys
 
-from gitsqueeze.util import Config
+from squeeze.util import Config
 
 class TestConfig(unittest.TestCase):
 

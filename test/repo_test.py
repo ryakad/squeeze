@@ -1,17 +1,17 @@
 #! /usr/bin/env python
 #
-# GitSqueeze
+# Squeeze
 # Copyright (c) Ryan Kadwell <ryan@riaka.ca>
 #
-# Tests for the gitsqeeze.repo classes
+# Tests for the squeeze.repo classes
 #
 # Author: Ryan Kadwell <ryan@riaka.ca>
 #
 
 import unittest
 
-from gitsqueeze import *
-from gitsqueeze import repo
+from squeeze import *
+from squeeze import repo
 
 class HgRepoTest(unittest.TestCase):
 

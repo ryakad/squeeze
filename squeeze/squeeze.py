@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# scm-squeeze
+# squeeze
 # Copyright (c) Ryan Kadwell <ryan@riaka.ca>
 #
 # Script to process file changes on a scm repository as commits are made.
@@ -59,7 +59,7 @@ class Squeeze(object):
       self.config = Config(config_path)
 
       self.repo = repo = get_repo(
-         repo_type=self.config.get("similarity.rename", "git"),
+         repo_type=self.config.get("repo", "git"),
          path=self.project_base_dir,
          rename_similarity=self.config.get("similarity.rename", 100),
          copy_similarity=self.config.get("similarity.copy", 100)
@@ -107,7 +107,7 @@ class Squeeze(object):
          handler = logbook.FileHandler(os.path.abspath(self.data_path + "/current.log"))
          handler.push_application()
 
-         self._logger = logbook.Logger('GitSqueeze')
+         self._logger = logbook.Logger('Squeeze')
          return self._logger
 
    @property
@@ -203,11 +203,11 @@ class DiffRunner(object):
       """Add a function to the list of handlers
 
          Available handler deltas are:
-         gitsqueeze.FILE_ADDED
-         gitsqueeze.FILE_DELETED
-         gitsqueeze.FILE_MODIFIED
-         gitsqueeze.FILE_COPIED
-         gitsqueeze.FILE_RENAMED
+         squeeze.FILE_ADDED
+         squeeze.FILE_DELETED
+         squeeze.FILE_MODIFIED
+         squeeze.FILE_COPIED
+         squeeze.FILE_RENAMED
 
          The handler function should take as parameters a delta parameter for
          the type of change and a list of positional parameters representing
