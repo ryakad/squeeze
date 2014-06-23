@@ -19,7 +19,7 @@ setup(
    scripts=["bin/squeeze"],
    # url='http://pypi.python.org/pypi/Squeeze/',
    license='LICENSE.txt',
-   description='Hook into vcs changesets',
+   description='Library for parsing change sets from version control systems',
    long_description=open('README.md').read(),
    install_requires=[
       "logbook>=0.7.0",

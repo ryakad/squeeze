@@ -1,7 +1,7 @@
 Squeeze
 =======
 
-Squeeze is a python library that allows you to hook into your VCS changesets
+Squeeze is a python library that allows you to hook into your VCS change sets
 performing actions on the different file changes. The currently supported
 VCSs are git and mercurial.
 
@@ -26,7 +26,7 @@ may also want to set your VCS to ignore the .squeeze directory.
 How it works
 ------------
 
-Squeeze is used to run a function against each diff in a changeset depending
+Squeeze is used to run a function against each diff in a change set depending
 on the type of change. By default squeeze will keep track of the commit
 identifier that it stopped at and will start at that commit next time. This
 way each commit in the repo will be processed sequentially as changes are
@@ -34,7 +34,7 @@ committed. If you do not want this sequential style you can make use of the
 core classes and customize squeeze to do what you need.
 
 
-### Handling changesets
+### Handling change sets
 
 The different changes that squeeze will detect are:
 
