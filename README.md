@@ -1,7 +1,10 @@
 Squeeze
 =======
 
-Squeeze is a python library to allow you to hook into your vcs changesets.
+Squeeze is a python library to allow you to hook into your VCS changesets
+performing different actions on the different file changes. Currently
+supported VCSs are git and mercurial.
+
 
 Installation
 ------------
@@ -14,57 +17,107 @@ cd squeeze
 python setup.py install
 ```
 
+Once you have installed the library and are ready use squeeze with an
+existing repo you will need to run the `squeeze` command in the base
+directory of the repo you want to use to setup the required folders and
+config files. You may also want to set the .squeeze directory to be ignored.
 
-2. Create a git plugin file called git-squeeze and put it somewhere in your
-shell search path. Make it executable and this can now be run as `git squeeze`
-from inside a git repository.
 
-3. Add the following content to git-squeeze
+How it works
+------------
+
+### Handling changesets
+
+There are currently two main levels to the application. At the top level
+there is the Squeeze class that can be used to keep track of the state and
+will always from the diff from the last run to the latest commit. If this is
+not what you desire you can always use the DiffRunner object directly and
+pass in the commit identifiers that you want to diff against.
+
+The different changes that squeeze will detect are:
 
 ```python
+squeeze.FILE_ADDED    # set when a file is added
+squeeze.FILE_DELETED  # set when a file is removed
+squeeze.FILE_MODIFIED # set when a file is modified
+squeeze.FILE_COPIED   # set when a file is copied from an existing file
+squeeze.FILE_RENAMED  # set when a file is renamed
+```
 
-from squeeze import *
+Each user function should be defined as:
 
-# Define a function that will be run when git-squeeze detects an added file
-# since the last run.
-def on_file_add(delta, *files):
-   print "Added file " + files[0]
+```python
+def function_name(change_type, *files):
+   # handle function here
+```
 
-squeeze = Squeeze()
+The change_type will be a constant representing the change type that the file(s)
+has undergone. This allows you to tread a file addition, copy and rename all
+the same.
 
-# Add your custom function as a handler for when the file is added
-squeeze.add_handler(on_file_add, squeeze.FILE_ADDED)
+```python
+def file_added(change_type, *files):
+   if change_type == squeeze.FILE_ADDED:
+      # Handle file addition.
+      # Path to file will be stored at files[0]
+      file = files[0]
+   elif change_type == squeeze.FILE_COPIED:
+      # Handle file copy
+      # For copies and renames files[0] is the origin and files[1] is the
+      # destination
+      file = files[1]
+   else:
+      raise ArgumentError('Invalid change_type for file_added()')
 
-# run your squeeze
-squeeze.run()
+   # TODO process file as being added
+   pass
+```
+
+Once you have defined functions to be run on changes you will need to tell
+the application what changes you want that function called on. To do this
+you use the add_handler(func, type) method. You can reuse a function for
+multiple file types using the binry `|` operator.
+
+```python
+s = squeeze.Squeeze()
+
+function handle_rename_copy(type, *files):
+   print "File {0} based off of file {1}".format(files[1], files[0])
+
+s.add_handler(handle_rename_copy, squeeze.FILE_RENAMED | squeeze.FILE_COPIED)
+```
+
+To run the diff you just use the `run()` method. If using the run method on
+the DiffRunner you will be required to pass in the start and end commit
+identifier. The Squeeze class handles this internally using a local file to
+cache the identifier of the last run.
+
+
+### Sample Application
+
+Here is a simple git plugin that just prints all the files that were added
+since the last scan.
+
+```python
+#! /usr/bin/env python
+
+# import the squeeze library
+import squeeze
+
+# Create a function that will handle file additions
+def handle_add(delta, *files):
+   print "ADDED " + files[0]
+
+s = squeeze.Squeeze()
+
+# Function will be called when a file addition is detected
+s.add_handler(handle_add, squeeze.FILE_ADDED)
+
+s.run()
 
 ```
 
-You can see from the above code that adding callbacks for file changes is
-quite simple. Other changes that can be used are:
+For more samples you can look in the `examples` folder in this repo.
 
-+ squeeze.FILE_ADDED    - set when a file is added
-+ squeeze.FILE_DELETED  - set when a file is removed
-+ squeeze.FILE_MODIFIED - set when a file is modified
-+ squeeze.FILE_COPIED   - set when a file is copied from an existing file
-+ squeeze.FILE_RENAMED  - set when a file is renamed
-
-
-More Examples
--------------
-
-Using the same function for different change types:
-
-```python
-
-def handle_multiple(delta, *files):
-   if delta == FILE_ADDED:
-      # handle addition
-   elif delta == FILE_DELETED:
-      # Handle file deletion
-
-squeeze = squeeze.Squeeze()
-squeeze.add_handler(handle_multiple, FILE_ADDED | FILE_DELETED)
-squeeze.run()
-
-```
+If you find any bugs or just want a new feature submit an issue or if you
+are feeling more adventurous a pull request.
