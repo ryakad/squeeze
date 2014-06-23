@@ -3,10 +3,10 @@
 # git-squeeze
 # Copyright (c) Ryan Kadwell <ryan@riaka.ca>
 #
-# Sample git plugin
+# Sample git plugin making use of squeeze
 #
-# To use this command as `git squeeze` you would simply need to add this bin
-# folder to your path.
+# To use this command as `git squeeze` you would simply need to add this
+# file somewhere on your path and modify the functions to fit your needs.
 #
 # Author: Ryan Kadwell <ryan@riaka.ca>
 #

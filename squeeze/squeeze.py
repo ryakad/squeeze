@@ -162,7 +162,6 @@ class Squeeze(object):
       except Exception, e:
          self.exit(str(e))
 
-
    def _cleanup(self):
       if not remove_pid_lock_file(self.lockfile):
          self.logger.error("Unable to remove lockfile")
