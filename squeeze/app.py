@@ -16,6 +16,7 @@ import yaml
 
 from repo import get_repo
 from util import Command
+from core import DiffRunner
 
 class Squeeze(object):
    """Implementation of the squeeze library"""
