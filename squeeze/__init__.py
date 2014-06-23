@@ -8,8 +8,8 @@
 # Author: Ryan Kadwell <ryan@riaka.ca>
 #
 
-from squeeze import (
-   Squeeze,
+from app import Squeeze
+from core import (
    FILE_ADDED,
    FILE_DELETED,
    FILE_MODIFIED,

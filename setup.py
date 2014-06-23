@@ -17,7 +17,6 @@ setup(
    author_email='ryan@riaka.ca',
    packages=['squeeze'],
    scripts=["bin/squeeze"],
-   # TODO here for when we release version 1
    # url='http://pypi.python.org/pypi/Squeeze/',
    license='LICENSE.txt',
    description='Hook into vcs changesets',

@@ -11,20 +11,14 @@
 import os
 import sys
 import logbook
+import psutil
+import yaml
 
-from util import Command, Config, create_pid_lock_file, remove_pid_lock_file
 from repo import get_repo
-
-# Binary flags for delta types
-FILE_ADDED    = 0b00001 # 1
-FILE_DELETED  = 0b00010 # 2
-FILE_MODIFIED = 0b00100 # 4
-FILE_COPIED   = 0b01000 # 8
-FILE_RENAMED  = 0b10000 # 16
-
+from util import Command
 
 class Squeeze(object):
-
+   """Implementation of the squeeze library"""
    def __init__(self):
       """Initialize the Application Runner"""
       self.project_base_dir = self.get_base_dir()
@@ -51,7 +45,6 @@ class Squeeze(object):
       self.latest_run = os.path.abspath(self.data_path + "/latest")
 
       # Load the config file. Creating it if it does not already exist.
-      # TODO: Should create a squeeze init command to setup a directory.
       config_path = self.data_path + "/config.yml"
       if not os.path.exists(config_path):
          open(config_path, 'a').close()
@@ -65,7 +58,7 @@ class Squeeze(object):
          copy_similarity=self.config.get("similarity.copy", 100)
          )
 
-      # TODO: Setup the runner
+      # Setup the runner
       self.runner = DiffRunner(self.repo)
 
    def get_base_dir(self):
@@ -178,48 +171,47 @@ class Squeeze(object):
       self.runner.add_handler(function, delta)
 
 
-class DiffRunner(object):
-   """Process Diff calling callbacks for each
-   """
-   def __init__(self, repo):
-      self.handlers = {}
-      self.repo = repo
+def create_pid_lock_file(filename):
+   # A PID file exists we can check if we are able to remove it (i.e. the process
+   # has ended but did not remove the lock file)
+   if os.path.exists(filename) and not remove_pid_lock_file(filename):
+      return False
 
-   def run(self, a, b):
-      """Calls handler for each change between commits a and b"""
-      if a and not self.repo.has_commit(a):
-         raise ValueError('Repository does not have a commit identified by "{0}"'.format(a))
-      elif b and not self.repo.has_commit(b):
-         raise ValueError('Repository does not have a commit identified by "{0}"'.format(b))
+   with open(filename, "w") as f:
+      f.write(str(os.getpid()))
 
-      changes = self.repo.diff(a, b)
+   return True
 
-      for changetype, files in changes:
-         for function in self.get_handlers_for(changetype):
-            function(changetype, *files)
+def remove_pid_lock_file(filename):
+   with open(filename, "r") as f:
+      pid = f.read().strip()
 
-   def add_handler(self, function, delta):
-      """Add a function to the list of handlers
+   # Check if the process is still running and only remove if it is not
+   process = [p for p in psutil.get_process_list() if p.pid==pid]
+   if not process:
+      os.remove(filename)
+      return True
+   else:
+      return False
 
-         Available handler deltas are:
-         squeeze.FILE_ADDED
-         squeeze.FILE_DELETED
-         squeeze.FILE_MODIFIED
-         squeeze.FILE_COPIED
-         squeeze.FILE_RENAMED
 
-         The handler function should take as parameters a delta parameter for
-         the type of change and a list of positional parameters representing
-         the effected files.
-      """
-      if delta not in self.handlers:
-         self.handlers[delta] = [function]
-      else:
-         self.handlers[delta].append(function)
+class Config(object):
+   """Squeeze config object"""
+   def __init__(self, filename):
+      if not os.path.exists(filename):
+         raise ValueError("The file {0} does not exist".format(filename))
+      elif not os.access(filename, os.R_OK):
+         raise ValueError("The file {0} is not readable".format(filename))
 
-   def get_handlers_for(self, delta):
-      funcs = []
-      for index in [x for x in self.handlers if x & delta]:
-         funcs = funcs + self.handlers[index]
+      with open(filename) as f:
+         self.config_data = yaml.load(f)
 
-      return funcs
+   def get(self, value_name, default=None):
+      data = self.config_data
+      for key in value_name.split("."):
+         if key in data:
+            data = data[key]
+         else:
+            return default
+
+      return data

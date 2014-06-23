@@ -8,10 +8,9 @@
 # Author: Ryan Kadwell <ryan@riaka.ca>
 #
 
-import squeeze
+import core
 import re
 from util import Command
-
 
 def get_repo(repo_type, path, **kwargs):
    """Return a repo of the given type initialised with kwargs
@@ -19,26 +18,28 @@ def get_repo(repo_type, path, **kwargs):
       This method is a factory constructor for creating different repository
       classes.
 
-      Current supported types are:
-
-      git - Will create a Git repository
-      hg  - Will create a Mercurial repository
+      Currently supported VCSs are Git and Mercurial.
    """
-
+   repo_type = repo_type.lower()
    if repo_type == "git":
       return GitRepo(path, **kwargs)
-   elif repo_type == "hg":
+   elif repo_type == "hg" or repo_type == "mercurial":
       return HgRepo(path, **kwargs)
    else:
-      raise ValueError("Unknown repo_type {0} provided".format(repo_type))
+      raise ValueError("Unsupported repo_type \"{0}\" provided".format(repo_type))
 
 class BaseRepo(object):
-   def __init__(self, path, rename_similarity=100, copy_similarity=100):
+   def __init__(self, path, **kwargs):
       self.base_path = path
+      # different repo's might have different options so just treat them all
+      # as keyword arguments.
+      self.options = kwargs
 
-      # Not all repo's will be able to make use of these.
-      self.rename_similarity = rename_similarity
-      self.copy_similarity = copy_similarity
+   def get_option(self, option_name, default=None):
+      if option_name in self.options:
+         return self.options[option_name]
+      else:
+         return default
 
    def has_commit(self, identifier):
       return identifier in self.commit_list
@@ -70,11 +71,11 @@ class GitRepo(BaseRepo):
          diff will return an array of tuples in the format (DELTA, [files])
          where delta is one of:
 
-         squeeze.FILE_ADDED
-         squeeze.FILE_DELETED
-         squeeze.FILE_MODIFIED
-         squeeze.FILE_COPIED
-         squeeze.FILE_RENAMED
+         squeeze.core.FILE_ADDED
+         squeeze.core.FILE_DELETED
+         squeeze.core.FILE_MODIFIED
+         squeeze.core.FILE_COPIED
+         squeeze.core.FILE_RENAMED
       """
       changes = []
 
@@ -93,7 +94,7 @@ class GitRepo(BaseRepo):
             self.exit('Unable to list the git tree to file files in project')
 
          for line in stdout:
-            changes.append((squeeze.FILE_ADDED, [line]))
+            changes.append((core.FILE_ADDED, [line]))
       else:
          if not b:
             b = "HEAD"
@@ -133,27 +134,27 @@ class GitRepo(BaseRepo):
       files = parts[1:]
 
       if changetype == "A":
-         return [(squeeze.FILE_ADDED, files)]
+         return [(core.FILE_ADDED, files)]
 
       elif changetype == "M":
-         return [(squeeze.FILE_MODIFIED, files)]
+         return [(core.FILE_MODIFIED, files)]
 
       elif changetype == "D":
-         return [(squeeze.FILE_DELETED, files)]
+         return [(core.FILE_DELETED, files)]
 
       elif re.match(r'^R[0-9]+$', changetype):
          similarity = int(changetype.lstrip("R"))
-         if similarity >= self.rename_similarity:
-            return [(squeeze.FILE_RENAMED, files)]
+         if similarity >= self.get_option('rename_similarity', 100):
+            return [(core.FILE_RENAMED, files)]
          else:
-            return [(squeeze.FILE_DELETED, [files[0]]), (squeeze.FILE_ADDED, [files[1]])]
+            return [(core.FILE_DELETED, [files[0]]), (core.FILE_ADDED, [files[1]])]
 
       elif re.match(r'^C[0-9]+$', changetype):
          similarity = int(changetype.lstrip("C"))
-         if similarity >= self.copy_similarity:
-            return [(squeeze.FILE_COPIED, files)]
+         if similarity >= self.get_option('copy_similarity', 100):
+            return [(core.FILE_COPIED, files)]
          else:
-            return [(squeeze.FILE_ADDED, [files[1]])]
+            return [(core.FILE_ADDED, [files[1]])]
 
 # Our representation of a mercurial repository
 class HgRepo(BaseRepo):
@@ -193,7 +194,7 @@ class HgRepo(BaseRepo):
             raise Exception("Unable to find changed files")
 
          for line in stdout:
-            changes.append((squeeze.FILE_ADDED, [line]))
+            changes.append((core.FILE_ADDED, [line]))
       else:
          if not b:
             b = "tip"
@@ -208,11 +209,11 @@ class HgRepo(BaseRepo):
 
          diff = self._parse_diff(stdout)
 
-         changes.append([(squeeze.FILE_ADDED, x) for x in diff['ADDED']])
-         changes.append([(squeeze.FILE_DELETED, x) for x in diff['DELETED']])
-         changes.append([(squeeze.FILE_MODIFIED, x) for x in diff['MODIFIED']])
-         changes.append([(squeeze.FILE_RENAMED, x) for x in diff['RENAMED']])
-         changes.append([(squeeze.FILE_COPIED, x) for x in diff['COPIED']])
+         changes.append([(core.FILE_ADDED, x) for x in diff['ADDED']])
+         changes.append([(core.FILE_DELETED, x) for x in diff['DELETED']])
+         changes.append([(core.FILE_MODIFIED, x) for x in diff['MODIFIED']])
+         changes.append([(core.FILE_RENAMED, x) for x in diff['RENAMED']])
+         changes.append([(core.FILE_COPIED, x) for x in diff['COPIED']])
 
       return changes
 
