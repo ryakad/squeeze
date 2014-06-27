@@ -104,12 +104,15 @@ import squeeze
 
 # Create a function that will handle file additions
 def handle_add(delta, *files):
-   print "ADDED " + files[0]
+   if delta == squeeze.FILE_ADDED:
+      print "ADDED " + files[0]
+   elif delta == squeese.FILE_COPIED:
+      print "ADDED " + files[1]
 
 s = squeeze.Squeeze()
 
 # Function will be called when a file addition is detected
-s.add_handler(handle_add, squeeze.FILE_ADDED)
+s.add_handler(handle_add, squeeze.FILE_ADDED | squeeze.FILE_COPIED)
 
 s.run()
 
