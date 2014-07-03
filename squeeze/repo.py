@@ -8,8 +8,8 @@
 # Author: Ryan Kadwell <ryan@riaka.ca>
 #
 
-import core
 import re
+import .core
 from .util import Command
 
 def get_repo(repo_type, path, **kwargs):
