@@ -1,6 +1,8 @@
 Squeeze
 =======
 
+[![Build Status](https://secure.travis-ci.org/ryakad/squeeze.png)](http://travis-ci.org/ryakad/squeeze)
+
 Squeeze is a python library that allows you to hook into your VCS change sets
 performing actions on the different file changes. The currently supported
 VCSs are git and mercurial.
