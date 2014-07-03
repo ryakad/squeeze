@@ -10,7 +10,7 @@
 
 import core
 import re
-from util import Command
+from .util import Command
 
 def get_repo(repo_type, path, **kwargs):
    """Return a repo of the given type initialised with kwargs

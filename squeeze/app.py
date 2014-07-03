@@ -14,9 +14,9 @@ import logbook
 import psutil
 import yaml
 
-from repo import get_repo
-from util import Command
-from core import DiffRunner
+from .repo import get_repo
+from .util import Command
+from .core import DiffRunner
 
 class Squeeze(object):
    """Implementation of the squeeze library"""
@@ -153,7 +153,7 @@ class Squeeze(object):
          # Done processing so cleanup
          self._cleanup()
 
-      except Exception, e:
+      except Exception as e:
          self.exit(str(e))
 
    def _cleanup(self):
