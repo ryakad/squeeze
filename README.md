@@ -4,14 +4,15 @@ Squeeze
 [![Build Status](https://secure.travis-ci.org/ryakad/squeeze.png)](http://travis-ci.org/ryakad/squeeze)
 
 Squeeze is a python library that allows you to hook into your VCS change sets
-performing actions on the different file changes. The currently supported
-VCSs are git and mercurial.
+performing actions on the different file changes. Currently the only supported
+VCSs are git and mercurial although I have plans to add SVN and CVS in the
+near future.
 
 
 Installation
 ------------
 
-Setup can be performed by running the setup.py file
+Installation can be performed by running the setup.py file
 
 ```sh
 git clone https://github.com/ryakad/squeeze
@@ -28,12 +29,12 @@ may also want to set your VCS to ignore the .squeeze directory.
 How it works
 ------------
 
-Squeeze is used to run a function against each diff in a change set depending
+Squeeze is used to run a callback for each diff in a change set depending
 on the type of change. By default squeeze will keep track of the commit
-identifier that it stopped at and will start at that commit next time. This
-way each commit in the repo will be processed sequentially as changes are
-committed. If you do not want this sequential style you can make use of the
-core classes and customize squeeze to do what you need.
+identifier that it stopped at and will start at that commit next time so each
+diff is only processed once and in sequence. If you do not want this sequential,
+once per diff, style you can make use of the core classes and create your own
+squeeze application to do what you need.
 
 
 ### Handling change sets
@@ -52,12 +53,13 @@ Each user function should be defined as:
 
 ```python
 def function_name(change_type, *files):
-   # handle changed file here
+   # handle affected file(s) here
 ```
 
-The change_type will be a constant representing the change type that the
-file(s) has undergone. This makes it possible to have a function that
-handles multiple change types like in the example below.
+The `change_type` will be a constant representing the change type that the
+file(s) underwent. This makes it possible to have a function that handles
+multiple change types. Consider the following for an example of when this is
+useful.
 
 ```python
 def file_added(change_type, *files):
@@ -79,7 +81,8 @@ def file_added(change_type, *files):
 
 Once you have defined functions to be run for changes you will need to tell
 the application what changes you want that function called on. To do this
-you use the add_handler(func, type) method. You can specify multiple change types using the binry `|` operator.
+you use the add_handler(func, type) method. You can specify multiple change
+types using the binary `|` operator.
 
 ```python
 s = squeeze.Squeeze()
@@ -90,7 +93,7 @@ function handle_rename_copy(type, *files):
 s.add_handler(handle_rename_copy, squeeze.FILE_RENAMED | squeeze.FILE_COPIED)
 ```
 
-To run the diff you just use the `run()` method.
+To run the diff you just call the applications `run()` method.
 
 
 ### Sample Application
@@ -101,7 +104,6 @@ since the last scan.
 ```python
 #! /usr/bin/env python
 
-# import the squeeze library
 import squeeze
 
 # Create a function that will handle file additions
@@ -113,14 +115,15 @@ def handle_add(delta, *files):
 
 s = squeeze.Squeeze()
 
-# Function will be called when a file addition is detected
+# Set the function to be called any time a file is added
 s.add_handler(handle_add, squeeze.FILE_ADDED | squeeze.FILE_COPIED)
 
 s.run()
 
 ```
 
-For more samples you can look in the `examples` folder in this repo.
+For more samples you can look in the `examples` folder in this repo. They are
+a little lacking as of now but I will add some more as time goes on.
 
-If you find any bugs or just want a new feature submit an issue on github -
+If you find any bugs or just want a new feature submit an issue on github --
 or even better, a pull request.
