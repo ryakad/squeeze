@@ -9,7 +9,7 @@
 #
 
 import re
-import .core
+from . import core
 from .util import Command
 
 def get_repo(repo_type, path, **kwargs):
