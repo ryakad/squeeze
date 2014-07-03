@@ -7,7 +7,8 @@
 
 language: python
 python:
-   - "3.3"
+   - "3.3.2"
+   - "3.3.5"
    - "2.7"
 # Install dependencies using the setup.py file
 install: python setup.py install
