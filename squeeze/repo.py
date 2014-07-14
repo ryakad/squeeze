@@ -79,10 +79,7 @@ class GitRepo(BaseRepo):
       """
       changes = []
 
-      if a == b:
-         # Nothing to do.
-         pass
-      elif not a:
+      if not a:
          branch = "master" # TODO Use the current branch
          # Everything in repo is new since we dont have a starting point
          returncode, stdout, stderr = Command.run(
@@ -95,6 +92,9 @@ class GitRepo(BaseRepo):
 
          for line in stdout:
             changes.append((core.FILE_ADDED, [line]))
+      elif a == b:
+         # Nothing to do.
+         pass
       else:
          if not b:
             b = "HEAD"
@@ -180,10 +180,7 @@ class HgRepo(BaseRepo):
    def diff(self, a, b):
       changes = []
 
-      if a == b:
-         # Nothing to do.
-         pass
-      elif not a:
+      if not a:
          # Treat everything as new
          returncode, stdout, stderr = Command.run(
             ["hg", "locate"],
@@ -195,6 +192,9 @@ class HgRepo(BaseRepo):
 
          for line in stdout:
             changes.append((core.FILE_ADDED, [line]))
+      elif a == b:
+         # Nothing to do.
+         pass
       else:
          if not b:
             b = "tip"
