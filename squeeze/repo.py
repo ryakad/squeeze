@@ -80,10 +80,18 @@ class GitRepo(BaseRepo):
       changes = []
 
       if not a:
-         branch = "master" # TODO Use the current branch
+         if not b:
+            # TODO Use the current branch
+            commit = "master"
+         else:
+            if not self.has_commit(b):
+               raise Exception("Invalid commit identifier {0}".format(b))
+
+            commit = b
+
          # Everything in repo is new since we dont have a starting point
          returncode, stdout, stderr = Command.run(
-            ['git', 'ls-tree', '-r', branch, '--name-only'],
+            ['git', 'ls-tree', '-r', commit, '--name-only'],
             cwd=self.base_path
          )
 
@@ -181,9 +189,17 @@ class HgRepo(BaseRepo):
       changes = []
 
       if not a:
-         # Treat everything as new
+         if not b:
+            # Treat everything as new
+            diff_command = ["hg", "locate"];
+         else:
+            if not self.has_commit(b):
+               raise Exception("Invalid commit identifier {0}".format(b))
+
+            diff_command = ["hg", "locate", "--rev", b];
+
          returncode, stdout, stderr = Command.run(
-            ["hg", "locate"],
+            diff_command,
             cwd=self.base_path
          )
 
